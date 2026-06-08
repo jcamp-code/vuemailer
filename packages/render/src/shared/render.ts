@@ -52,5 +52,8 @@ export async function render<T extends Component>(
   // Self-close void elements (XHTML-valid) and drop empty `style`/`class`
   // attributes — Vue serializes an empty style object as `style=""`, whereas
   // React omits it entirely.
-  return selfCloseVoidElements(document).replace(/ (?:class|style)=""/g, '')
+  const html = selfCloseVoidElements(document).replace(/ (?:class|style)=""/g, '')
+
+  // Optional post-processing seam (Maizzle, juice, custom transforms, ...).
+  return options?.transform ? options.transform(html) : html
 }

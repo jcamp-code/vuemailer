@@ -33,13 +33,28 @@ const text = await render(Email, { name: 'Ada' }, { plainText: true })
 render(
   component: Component,
   props?: Record<string, unknown>,
-  options?: { pretty?: boolean; plainText?: boolean },
+  options?: {
+    pretty?: boolean
+    plainText?: boolean
+    transform?: (html: string) => string | Promise<string>
+  },
 ): Promise<string>
 ```
 
 - **`pretty`** — format the HTML with a prettier-based pretty-printer.
 - **`plainText`** — return a plain-text rendering (via `html-to-text`) instead
   of HTML.
+- **`transform`** — a post-processing hook applied to the final HTML (after
+  pretty-print and self-closing). Pipe the output through an external pipeline —
+  [Maizzle](https://maizzle.com), [`juice`](https://github.com/Automattic/juice)
+  CSS inlining, or your own transforms — without vuemailer depending on any of
+  them. Ignored for `plainText`.
+
+```ts
+import juice from 'juice'
+
+const html = await render(Email, props, { transform: (html) => juice(html) })
+```
 
 ## License
 

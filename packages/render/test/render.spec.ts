@@ -27,4 +27,27 @@ describe('render', () => {
     expect(output).toContain('\n')
     expect(output).toContain('Hello world')
   })
+
+  it('applies a sync transform hook to the final HTML', async () => {
+    const output = await render(Hello, undefined, {
+      transform: (html) => html.replace('Hello world', 'Goodbye world'),
+    })
+    expect(output).toContain('Goodbye world')
+    expect(output).not.toContain('Hello world')
+  })
+
+  it('awaits an async transform hook', async () => {
+    const output = await render(Hello, undefined, {
+      transform: (html) => Promise.resolve(`<!-- transformed -->${html}`),
+    })
+    expect(output.startsWith('<!-- transformed -->')).toBe(true)
+  })
+
+  it('ignores the transform hook for plain text', async () => {
+    const output = await render(Hello, undefined, {
+      plainText: true,
+      transform: () => 'SHOULD NOT RUN',
+    })
+    expect(output.trim()).toBe('Hello world')
+  })
 })
