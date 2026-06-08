@@ -8,6 +8,7 @@ Usage:
 Options:
   --dir <path>     Emails directory (default: emails)
   --port <number>  Port to listen on (default: 3000)
+  --host <addr>    Interface to bind (default: 127.0.0.1; use 0.0.0.0 to expose on a LAN)
   -h, --help       Show this help
 `
 
@@ -30,6 +31,7 @@ export async function run(argv: string[] = process.argv.slice(2)): Promise<void>
       await dev({
         dir: getFlag(argv, 'dir'),
         port: port ? Number(port) : undefined,
+        host: getFlag(argv, 'host'),
       })
       return
     }

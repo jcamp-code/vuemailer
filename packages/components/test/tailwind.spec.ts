@@ -65,4 +65,19 @@ describe('Tailwind', () => {
     expect(html).toContain('font-size:1.5rem')
     expect(html).not.toContain('font-size:14px')
   })
+
+  it('does not let an arbitrary-value class break out of the head <style>', async () => {
+    // The head CSS is injected via innerHTML, so a `</style>` reaching it would
+    // escape the element. This arbitrary value tries to smuggle one in via a CSS
+    // hex escape (`\3C` = `<`), which carries no HTML-special chars.
+    const html = await render(() =>
+      h(Tailwind, () => h('div', { class: 'hover:[--x:\\3C/style\\3E]' }, 'hi')),
+    )
+    const styleBody = html.match(/<style[^>]*>([\s\S]*?)<\/style>/)?.[1] ?? ''
+    // The rule must survive intact (a breakout would truncate it before the closer)…
+    expect(styleBody).toContain('@media')
+    // …and the body must contain neither a `</style>` sequence nor a raw tag start.
+    expect(styleBody).not.toContain('</style')
+    expect(styleBody).not.toMatch(/<[a-z]/i)
+  })
 })

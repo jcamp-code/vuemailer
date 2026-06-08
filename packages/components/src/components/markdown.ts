@@ -119,8 +119,27 @@ const numericalCssProperties = new Set([
 const camelToKebabCase = (str: string): string =>
   str.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
 
+// Markdown output is assigned via innerHTML, so all interpolated content must be
+// escaped for the context it lands in (HTML text, double-quoted attribute, or URL).
+const htmlEscape = (value: unknown): string =>
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+
+/** Allow only safe URL schemes; neutralize `javascript:`/`vbscript:`/`data:` etc. */
+const safeUrl = (url: string): string => {
+  const trimmed = url.trim()
+  // Relative URLs and anchors are fine; for absolute URLs require a known-safe scheme.
+  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) {
+    if (!/^(?:https?|mailto|tel):/i.test(trimmed)) return '#'
+  }
+  return htmlEscape(trimmed)
+}
+
 const escapeQuotes = (value: unknown): unknown =>
-  typeof value === 'string' && value.includes('"') ? value.replace(/"/g, '&#x27;') : value
+  typeof value === 'string' && value.includes('"') ? value.replace(/"/g, '&quot;') : value
 
 function parseCssInJsToInlineCss(cssProperties: CSSProperties | undefined): string {
   if (!cssProperties) return ''
@@ -149,9 +168,10 @@ function createRenderer(custom?: StylesType): Renderer {
   renderer.br = () => `<br${styleAttr(finalStyles.br)} />`
 
   renderer.code = ({ text }) =>
-    `<pre${styleAttr(finalStyles.codeBlock)}><code>${`${text.replace(/\n$/, '')}\n`}</code></pre>\n`
+    `<pre${styleAttr(finalStyles.codeBlock)}><code>${htmlEscape(`${text.replace(/\n$/, '')}\n`)}</code></pre>\n`
 
-  renderer.codespan = ({ text }) => `<code${styleAttr(finalStyles.codeInline)}>${text}</code>`
+  renderer.codespan = ({ text }) =>
+    `<code${styleAttr(finalStyles.codeInline)}>${htmlEscape(text)}</code>`
 
   renderer.del = ({ tokens }) =>
     `<del${styleAttr(finalStyles.strikethrough)}>${renderer.parser.parseInline(tokens)}</del>`
@@ -167,12 +187,12 @@ function createRenderer(custom?: StylesType): Renderer {
   renderer.hr = () => `<hr${styleAttr(finalStyles.hr)} />\n`
 
   renderer.image = ({ href, text, title }) =>
-    `<img src="${href.replaceAll('"', '&quot;')}" alt="${text.replaceAll('"', '&quot;')}"${
-      title ? ` title="${title}"` : ''
+    `<img src="${safeUrl(href)}" alt="${htmlEscape(text)}"${
+      title ? ` title="${htmlEscape(title)}"` : ''
     }${styleAttr(finalStyles.image)}>`
 
   renderer.link = ({ href, title, tokens }) =>
-    `<a href="${href}" target="_blank"${title ? ` title="${title}"` : ''}${styleAttr(
+    `<a href="${safeUrl(href)}" target="_blank"${title ? ` title="${htmlEscape(title)}"` : ''}${styleAttr(
       finalStyles.link,
     )}>${renderer.parser.parseInline(tokens)}</a>`
 

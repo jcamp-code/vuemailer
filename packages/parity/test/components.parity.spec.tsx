@@ -7,10 +7,12 @@ import {
   Button,
   Column,
   Container,
+  Font,
   Heading,
   Hr,
   Img,
   Link,
+  Markdown,
   Preview,
   render as renderVue,
   Row,
@@ -91,6 +93,29 @@ const cases: Case[] = [
     react: <R.Preview>Sneak peek of the email</R.Preview>,
     vue: () => h(Preview, { text: 'Sneak peek of the email' }),
   },
+  {
+    // react-email takes the markdown as children; vuemailer takes a `source` prop.
+    // For benign content the rendered HTML is identical.
+    name: 'Markdown',
+    react: <R.Markdown>{'# Title\n\n**bold** and a [link](https://example.com)'}</R.Markdown>,
+    vue: () => h(Markdown, { source: '# Title\n\n**bold** and a [link](https://example.com)' }),
+  },
+  {
+    name: 'Font',
+    react: (
+      <R.Font
+        fontFamily="Roboto"
+        fallbackFontFamily="Arial"
+        webFont={{ url: 'https://example.com/roboto.woff2', format: 'woff2' }}
+      />
+    ),
+    vue: () =>
+      h(Font, {
+        fontFamily: 'Roboto',
+        fallbackFontFamily: 'Arial',
+        webFont: { url: 'https://example.com/roboto.woff2', format: 'woff2' },
+      }),
+  },
 ]
 
 describe('component parity (react-email vs vuemailer)', () => {
@@ -116,5 +141,39 @@ describe('documented, intentional divergences from react-email', () => {
     expect(vueHtml).not.toContain('rel="preload"')
     // The <img> itself is identical.
     expect(canonicalize(vueHtml)).toContain('<img alt="A cat"')
+  })
+})
+
+// vuemailer's Markdown/Font ports add output-escaping that react-email lacks. These
+// are security divergences by design: the inputs below are XSS payloads that
+// react-email passes through verbatim and vuemailer neutralizes. Pinned so the
+// hardening can't silently regress back to react-email's (vulnerable) behavior.
+describe('security divergences from react-email (hardened on purpose)', () => {
+  it('Markdown: react-email emits a javascript: link; vuemailer neutralizes it', async () => {
+    const source = '[click](javascript:alert(1))'
+    const reactHtml = await R.render(<R.Markdown>{source}</R.Markdown>)
+    const vueHtml = await renderVue(() => h(Markdown, { source }))
+    expect(reactHtml).toContain('href="javascript:alert(1)"')
+    expect(vueHtml).not.toContain('javascript:')
+    expect(vueHtml).toContain('href="#"')
+  })
+
+  it('Markdown: react-email renders raw HTML in code spans; vuemailer escapes it', async () => {
+    const source = '`<img src=x onerror=alert(1)>`'
+    const reactHtml = await R.render(<R.Markdown>{source}</R.Markdown>)
+    const vueHtml = await renderVue(() => h(Markdown, { source }))
+    expect(reactHtml).toContain('<img src=x onerror=alert(1)>')
+    expect(vueHtml).not.toContain('<img src=x onerror')
+    expect(vueHtml).toContain('&lt;img src=x onerror=alert(1)&gt;')
+  })
+
+  it('Font: a fontFamily payload breaks out of react-email but not vuemailer', async () => {
+    const payload = "x'} </style><script>alert(1)</script><style>{"
+    const reactHtml = await R.render(<R.Font fontFamily={payload} fallbackFontFamily="Arial" />)
+    const vueHtml = await renderVue(() =>
+      h(Font, { fontFamily: payload, fallbackFontFamily: 'Arial' }),
+    )
+    expect(reactHtml).toContain('</style><script>alert(1)</script>')
+    expect(vueHtml).not.toContain('</style><script>')
   })
 })

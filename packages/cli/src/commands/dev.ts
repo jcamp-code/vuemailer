@@ -68,12 +68,35 @@ export interface DevOptions {
   dir?: string
   port?: number
   root?: string
+  /** Network interface to bind. Defaults to loopback only. Set explicitly to expose on a LAN. */
+  host?: string
+}
+
+const EMAIL_FILE = /\.(vue|ts|js|mjs|tsx|jsx)$/
+// Cap request bodies so a reachable POST endpoint can't OOM the process.
+const MAX_BODY_BYTES = 1_048_576
+
+/**
+ * Resolve a caller-supplied email path, confined to `emailsDir`. Rejects
+ * traversal (`..`), absolute paths, and non-email extensions so an untrusted
+ * request can't read or execute files elsewhere on disk.
+ */
+export function resolveEmailPath(emailsDir: string, relFile: string): string {
+  const absolute = path.resolve(emailsDir, relFile)
+  if (absolute !== emailsDir && !absolute.startsWith(emailsDir + path.sep)) {
+    throw new Error('Email path is outside the emails directory.')
+  }
+  if (!EMAIL_FILE.test(absolute)) {
+    throw new Error('Not a renderable email file.')
+  }
+  return absolute
 }
 
 export async function dev(options: DevOptions = {}): Promise<void> {
   const root = path.resolve(options.root ?? process.cwd())
   const emailsDir = path.resolve(root, options.dir ?? 'emails')
   const port = options.port ?? 3000
+  const host = options.host ?? '127.0.0.1'
 
   const vite = await createViteServer({
     root,
@@ -84,7 +107,7 @@ export async function dev(options: DevOptions = {}): Promise<void> {
   })
 
   async function renderEmail(relFile: string): Promise<{ html: string; text: string }> {
-    const absolute = path.resolve(emailsDir, relFile)
+    const absolute = resolveEmailPath(emailsDir, relFile)
     const module = await vite.ssrLoadModule(absolute)
     const component = module.default
     if (!component) {
@@ -105,9 +128,32 @@ export async function dev(options: DevOptions = {}): Promise<void> {
 
   const readBody = async (req: IncomingMessage): Promise<Record<string, unknown>> => {
     const chunks: Buffer[] = []
-    for await (const chunk of req) chunks.push(chunk as Buffer)
+    let total = 0
+    for await (const chunk of req) {
+      const buf = chunk as Buffer
+      total += buf.byteLength
+      if (total > MAX_BODY_BYTES) throw new Error('Request body too large')
+      chunks.push(buf)
+    }
     const raw = Buffer.concat(chunks).toString('utf8')
     return raw ? (JSON.parse(raw) as Record<string, unknown>) : {}
+  }
+
+  // CSRF / cross-origin guard for state-changing endpoints. Only same-origin
+  // requests from the local dev UI may trigger a send. A cross-site page can
+  // forge a simple POST but cannot set a trustworthy Origin to our host.
+  const allowedHosts = new Set([`localhost:${port}`, `127.0.0.1:${port}`, `[::1]:${port}`])
+  const isSameOrigin = (req: IncomingMessage): boolean => {
+    const origin = req.headers.origin
+    if (origin) {
+      try {
+        return allowedHosts.has(new URL(origin).host)
+      } catch {
+        return false
+      }
+    }
+    // No Origin header (e.g. same-origin fetch in some browsers): fall back to Host.
+    return req.headers.host ? allowedHosts.has(req.headers.host) : false
   }
 
   const server = createHttpServer((req, res) => {
@@ -127,6 +173,11 @@ export async function dev(options: DevOptions = {}): Promise<void> {
             if (req.method !== 'POST') {
               res.statusCode = 405
               sendJson(res, { error: 'POST only' })
+              return
+            }
+            if (!isSameOrigin(req)) {
+              res.statusCode = 403
+              sendJson(res, { error: 'cross-origin request rejected' })
               return
             }
             try {
@@ -155,7 +206,7 @@ export async function dev(options: DevOptions = {}): Promise<void> {
             }
             try {
               const { html, text } = await renderEmail(file)
-              const absolutePath = path.resolve(emailsDir, file)
+              const absolutePath = resolveEmailPath(emailsDir, file)
               const source = await readFile(absolutePath, 'utf8')
               const compatibility = lintHtml(html)
               sendJson(res, { html, text, source, absolutePath, compatibility })
@@ -173,7 +224,8 @@ export async function dev(options: DevOptions = {}): Promise<void> {
             }
             try {
               const { html } = await renderEmail(file)
-              const base = `http://${req.headers.host ?? `localhost:${port}`}`
+              // Pin to our own origin — don't trust the client `Host` header.
+              const base = `http://localhost:${port}`
               sendJson(res, { rows: await lintEmail(html, base) })
             } catch (error) {
               sendJson(res, { error: errorMessage(error) })
@@ -235,10 +287,11 @@ export async function dev(options: DevOptions = {}): Promise<void> {
   vite.watcher.on('unlink', onChange)
 
   await new Promise<void>((resolve) => {
-    server.listen(port, () => {
+    server.listen(port, host, () => {
+      const shown = host === '127.0.0.1' || host === '::1' ? 'localhost' : host
       // eslint-disable-next-line no-console
       console.log(
-        `\n  vuemailer dev server running\n  → http://localhost:${port}\n  emails: ${emailsDir}\n`,
+        `\n  vuemailer dev server running\n  → http://${shown}:${port}\n  emails: ${emailsDir}\n`,
       )
       resolve()
     })

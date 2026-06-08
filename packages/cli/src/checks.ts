@@ -1,9 +1,56 @@
 import { type HTMLElement, parse } from 'node-html-parser'
+import { lookup } from 'node:dns/promises'
 import http, { type IncomingMessage } from 'node:http'
 import https from 'node:https'
+import net from 'node:net'
 
 // Ported from react-email's checkLinks / checkImages (packages/ui/src/actions/email-validation).
 // Runs against the rendered HTML; reports only non-success results, error-first.
+
+// Cap the body we'll read when sizing an image, so a hostile/huge src can't OOM us.
+const MAX_IMAGE_BYTES = 5_242_880
+
+/** True for loopback / private / link-local / unique-local addresses (SSRF guard). */
+export function isPrivateAddress(ip: string): boolean {
+  if (net.isIPv4(ip)) {
+    const [a, b] = ip.split('.').map(Number)
+    if (a === 10 || a === 127 || a === 0) return true
+    if (a === 169 && b === 254) return true // link-local (incl. cloud metadata 169.254.169.254)
+    if (a === 172 && b >= 16 && b <= 31) return true
+    if (a === 192 && b === 168) return true
+    return false
+  }
+  if (net.isIPv6(ip)) {
+    const v = ip.toLowerCase()
+    if (v === '::1' || v === '::') return true
+    if (v.startsWith('fe80') || v.startsWith('fc') || v.startsWith('fd')) return true
+    // IPv4-mapped (::ffff:a.b.c.d)
+    const mapped = v.match(/::ffff:(\d+\.\d+\.\d+\.\d+)$/)
+    if (mapped) return isPrivateAddress(mapped[1])
+    return false
+  }
+  return false
+}
+
+/**
+ * Rejects URLs that aren't plain http(s) or that resolve to a private/loopback
+ * address — the linter fetches arbitrary URLs from rendered email source, so
+ * without this it would be an SSRF gadget against internal/metadata endpoints.
+ */
+export async function assertFetchable(url: URL): Promise<void> {
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new Error(`Unsupported URL scheme: ${url.protocol}`)
+  }
+  const host = url.hostname.replace(/^\[|\]$/g, '')
+  if (net.isIP(host)) {
+    if (isPrivateAddress(host)) throw new Error('Refusing to fetch a private address')
+    return
+  }
+  const results = await lookup(host, { all: true })
+  if (results.some(({ address }) => isPrivateAddress(address))) {
+    throw new Error('Refusing to fetch a private address')
+  }
+}
 
 export type CheckStatus = 'success' | 'warning' | 'error'
 
@@ -17,7 +64,8 @@ export interface LintRow {
   line: number
 }
 
-function quickFetch(url: URL): Promise<IncomingMessage> {
+async function quickFetch(url: URL): Promise<IncomingMessage> {
+  await assertFetchable(url)
   return new Promise((resolve, reject) => {
     const caller = url.protocol === 'https:' ? https : http
     const req = caller.get(url, { headers: { 'user-agent': 'vuemailer-linter' } }, resolve)
@@ -26,8 +74,25 @@ function quickFetch(url: URL): Promise<IncomingMessage> {
   })
 }
 
-function lineFromOffset(offset: number, html: string): number {
-  return html.slice(0, offset).split('\n').length
+/**
+ * Builds a line-lookup over `html` once (O(n)) so per-link/per-image lookups are
+ * O(log n) binary search instead of slicing+splitting the whole string each time.
+ */
+function makeLineAt(html: string): (offset: number) => number {
+  const lineStarts = [0]
+  for (let i = 0; i < html.length; i++) {
+    if (html.charCodeAt(i) === 10) lineStarts.push(i + 1)
+  }
+  return (offset: number): number => {
+    let lo = 0
+    let hi = lineStarts.length - 1
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1
+      if (lineStarts[mid] <= offset) lo = mid
+      else hi = mid - 1
+    }
+    return lo + 1
+  }
 }
 
 function formatBytes(bytes: number): string {
@@ -51,7 +116,10 @@ interface CheckResult {
   checks: Check[]
 }
 
-async function checkLink(anchor: HTMLElement, html: string): Promise<CheckResult | undefined> {
+async function checkLink(
+  anchor: HTMLElement,
+  lineAt: (offset: number) => number,
+): Promise<CheckResult | undefined> {
   const link = anchor.attributes.href
   if (!link || link.startsWith('mailto:')) return undefined
 
@@ -59,7 +127,7 @@ async function checkLink(anchor: HTMLElement, html: string): Promise<CheckResult
     source: 'link',
     status: 'success',
     target: link,
-    line: lineFromOffset(anchor.range[0], html),
+    line: lineAt(anchor.range[0]),
     checks: [],
   }
 
@@ -95,7 +163,7 @@ async function checkLink(anchor: HTMLElement, html: string): Promise<CheckResult
 
 async function checkImage(
   image: HTMLElement,
-  html: string,
+  lineAt: (offset: number) => number,
   base: string,
 ): Promise<CheckResult | undefined> {
   const rawSource = image.attributes.src
@@ -106,7 +174,7 @@ async function checkImage(
     source: 'image',
     status: 'success',
     target: rawSource,
-    line: lineFromOffset(image.range[0], html),
+    line: lineAt(image.range[0]),
     checks: [],
   }
 
@@ -133,7 +201,13 @@ async function checkImage(
       if (!ok) result.status = code?.toString().startsWith('3') ? 'warning' : 'error'
 
       let bytes = 0
-      for await (const chunk of res) bytes += (chunk as Buffer).byteLength
+      for await (const chunk of res) {
+        bytes += (chunk as Buffer).byteLength
+        if (bytes > MAX_IMAGE_BYTES) {
+          res.destroy()
+          break
+        }
+      }
       result.checks.push({ type: 'image_size', passed: bytes < 1_048_576, byteCount: bytes })
       if (bytes > 1_048_576 && result.status !== 'error') result.status = 'warning'
     } catch {
@@ -199,9 +273,10 @@ function toRow(result: CheckResult): LintRow | undefined {
 
 export async function lintEmail(html: string, base: string): Promise<LintRow[]> {
   const ast = parse(html)
+  const lineAt = makeLineAt(html)
   const [links, images] = await Promise.all([
-    Promise.all(ast.querySelectorAll('a').map((a) => checkLink(a, html))),
-    Promise.all(ast.querySelectorAll('img').map((img) => checkImage(img, html, base))),
+    Promise.all(ast.querySelectorAll('a').map((a) => checkLink(a, lineAt))),
+    Promise.all(ast.querySelectorAll('img').map((img) => checkImage(img, lineAt, base))),
   ])
 
   const rows = [...links, ...images]

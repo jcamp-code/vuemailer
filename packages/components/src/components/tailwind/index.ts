@@ -118,7 +118,11 @@ export const Tailwind = defineComponent({
     downlevelForEmailClients(nonInlineStyles)
 
     const hasNonInlineStyles = nonInlinableRules.size > 0
-    const headCss = generate(nonInlineStyles)
+    // css-tree's `generate` does not escape `</style>` (e.g. from an arbitrary-value
+    // class like `[content:'…']` or a CSS hex escape), and this string is assigned via
+    // innerHTML. `<` is never needed literally in valid CSS output, so escaping it to
+    // its CSS escape neutralizes any `</style>` breakout while rendering identically.
+    const headCss = generate(nonInlineStyles).replaceAll('<', '\\3C ')
     const headStyleVNode = () => h('style', { innerHTML: headCss })
 
     const toArray = (value: unknown): unknown[] =>
