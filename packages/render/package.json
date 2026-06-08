@@ -1,6 +1,6 @@
 {
   "name": "@vuemailer/render",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Transform Vue components into HTML email templates",
   "keywords": [
     "email",
@@ -8,7 +8,15 @@
     "ssr",
     "vue"
   ],
+  "homepage": "https://github.com/jcamp-code/vuemailer/tree/main/packages/render#readme",
+  "bugs": "https://github.com/jcamp-code/vuemailer/issues",
   "license": "MIT",
+  "author": "John Campion Jr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jcamp-code/vuemailer.git",
+    "directory": "packages/render"
+  },
   "files": [
     "dist/**"
   ],

@@ -177,9 +177,6 @@ importers:
       marked:
         specifier: 'catalog:'
         version: 15.0.12
-      prismjs:
-        specifier: 'catalog:'
-        version: 1.30.0
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.0
@@ -190,6 +187,9 @@ importers:
       '@types/prismjs':
         specifier: 'catalog:'
         version: 1.26.6
+      prismjs:
+        specifier: 'catalog:'
+        version: 1.30.0
       tsup:
         specifier: 'catalog:'
         version: 8.5.1(jiti@2.7.0)(postcss@8.5.15)(typescript@5.9.3)

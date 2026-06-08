@@ -1,6 +1,6 @@
 {
   "name": "@vuemailer/cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Dev server with live preview for building emails with vuemailer.",
   "keywords": [
     "cli",
@@ -9,7 +9,15 @@
     "preview",
     "vue"
   ],
+  "homepage": "https://github.com/jcamp-code/vuemailer/tree/main/packages/cli#readme",
+  "bugs": "https://github.com/jcamp-code/vuemailer/issues",
   "license": "MIT",
+  "author": "John Campion Jr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jcamp-code/vuemailer.git",
+    "directory": "packages/cli"
+  },
   "bin": {
     "vuemailer": "./dist/bin.js"
   },

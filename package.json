@@ -3,6 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "description": "Build and send emails with Vue",
+  "homepage": "https://github.com/jcamp-code/vuemailer#readme",
+  "bugs": "https://github.com/jcamp-code/vuemailer/issues",
+  "license": "MIT",
+  "author": "John Campion Jr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jcamp-code/vuemailer.git"
+  },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",

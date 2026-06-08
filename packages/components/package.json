@@ -1,6 +1,6 @@
 {
   "name": "vuemailer",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Build and send emails with Vue",
   "keywords": [
     "components",
@@ -8,7 +8,15 @@
     "html-email",
     "vue"
   ],
+  "homepage": "https://github.com/jcamp-code/vuemailer#readme",
+  "bugs": "https://github.com/jcamp-code/vuemailer/issues",
   "license": "MIT",
+  "author": "John Campion Jr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jcamp-code/vuemailer.git",
+    "directory": "packages/components"
+  },
   "files": [
     "dist/**"
   ],
@@ -27,6 +35,16 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./code-block": {
+      "import": {
+        "types": "./dist/code-block.d.ts",
+        "default": "./dist/code-block.js"
+      },
+      "require": {
+        "types": "./dist/code-block.d.cts",
+        "default": "./dist/code-block.cjs"
+      }
     }
   },
   "publishConfig": {
@@ -44,19 +62,25 @@
     "@vuemailer/render": "workspace:*",
     "css-tree": "catalog:",
     "marked": "catalog:",
-    "prismjs": "catalog:",
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
     "@types/css-tree": "catalog:",
     "@types/prismjs": "catalog:",
+    "prismjs": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "vue": "catalog:"
   },
   "peerDependencies": {
+    "prismjs": "^1.30.0",
     "vue": "^3.4.0"
+  },
+  "peerDependenciesMeta": {
+    "prismjs": {
+      "optional": true
+    }
   },
   "engines": {
     "node": ">=18.0.0"
