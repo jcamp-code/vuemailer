@@ -7,6 +7,26 @@ for crafting responsive HTML emails, with a live preview dev server.
 > and [vue-email](https://github.com/vue-email/vue-email), both MIT-licensed.
 > See [Credits](#credits).
 
+## Why vuemailer?
+
+[react-email](https://github.com/resend/react-email) is a great way to build
+HTML email from components, but it's React-only.
+[vue-email](https://github.com/vue-email/vue-email) brought the idea to Vue, but
+hasn't kept pace and has been quiet for a while.
+
+vuemailer aims to give Vue the current react-email feature set. The approach is
+to follow react-email closely rather than reinvent: match its rendered output
+(checked by a [parity suite](./packages/parity) that renders equivalent
+templates through both and compares them) and port its MIT-licensed utilities —
+the HTML pretty-printer, the Tailwind-to-inline engine, the caniemail checks.
+The Vue 3 components build on vue-email's, and there's a Vite-based live-preview
+dev server.
+
+Two things get extra attention beyond matching react-email: rendering fidelity —
+clean, email-client-safe HTML with first-class plain-text and pretty-printed
+output — and a modern, actively maintained toolchain that gets a security review
+before each release.
+
 ## Packages
 
 | Package                                  | Description                                                                 |
@@ -23,11 +43,12 @@ Early development. Roadmap:
 3. ✅ Components at react-email feature parity (`vuemailer`) — all 19
 4. ✅ Tailwind → inline CSS (react-email's Tailwind v4 + css-tree engine)
 5. ✅ CLI dev server with live reload (`@vuemailer/cli`, Vite-based)
-6. ⬜ Live preview UI (fork of `@react-email/ui`)
+6. ✅ Live preview UI (Vue app bundled in `@vuemailer/cli`)
 
 Also: [`@vuemailer/parity`](./packages/parity) — cross-framework tests that
 render equivalent templates through react-email and vuemailer and assert they
-match (9/10 components identical; full welcome email 100%).
+match (11 components identical, full welcome email 100%; `Img` and the
+Markdown/Font security hardening are documented intentional divergences).
 
 ## Development
 
