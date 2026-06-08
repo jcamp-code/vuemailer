@@ -36,14 +36,13 @@ before each release.
 
 ## Status
 
-Early development. Roadmap:
+Stable — **1.0.0**. What's included:
 
-1. ✅ Scaffold monorepo
-2. ✅ Render engine (`@vuemailer/render`)
-3. ✅ Components at react-email feature parity (`vuemailer`) — all 19
-4. ✅ Tailwind → inline CSS (react-email's Tailwind v4 + css-tree engine)
-5. ✅ CLI dev server with live reload (`@vuemailer/cli`, Vite-based)
-6. ✅ Live preview UI (Vue app bundled in `@vuemailer/cli`)
+- ✅ Render engine (`@vuemailer/render`)
+- ✅ Components at react-email feature parity (`vuemailer`) — all 19
+- ✅ Tailwind → inline CSS (react-email's Tailwind v4 + css-tree engine)
+- ✅ CLI dev server with live reload (`@vuemailer/cli`, Vite-based)
+- ✅ Live preview UI (Vue app bundled in `@vuemailer/cli`)
 
 Also: [`@vuemailer/parity`](./packages/parity) — cross-framework tests that
 render equivalent templates through react-email and vuemailer and assert they
