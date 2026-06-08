@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Body, Button, Container, Head, Heading, Hr, Html, Tailwind, Text } from 'vuemailer'
+import { Body, Button, Container, Head, Heading, Hr, Html, Tailwind, Text } from '@vuemailer/core'
 </script>
 
 <template>

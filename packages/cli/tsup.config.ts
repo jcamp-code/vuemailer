@@ -5,6 +5,13 @@ export default defineConfig({
   format: ['esm'],
   target: 'node18',
   clean: true,
-  // vite/@vitejs/plugin-vue/ws/@vuemailer/render are runtime deps (kept external).
-  external: ['vite', '@vitejs/plugin-vue', 'ws', '@vuemailer/render', 'vue'],
+  // vite/@vitejs/plugin-vue/ws/@vuemailer/* are runtime deps (kept external).
+  external: [
+    'vite',
+    '@vitejs/plugin-vue',
+    'ws',
+    '@vuemailer/render',
+    '@vuemailer/caniemail',
+    'vue',
+  ],
 })

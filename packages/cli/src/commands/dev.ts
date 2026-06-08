@@ -1,4 +1,5 @@
 import vuePlugin from '@vitejs/plugin-vue'
+import { lintHtml } from '@vuemailer/caniemail'
 import { render } from '@vuemailer/render'
 import { createReadStream } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
@@ -14,7 +15,6 @@ import { WebSocketServer } from 'ws'
 
 import { lintEmail } from '../checks'
 import { discoverEmails } from '../discover'
-import { lintHtml } from '../lint'
 import { canSendTest, defaultFrom, sendTest } from '../send'
 import { checkSpam } from '../spam'
 

@@ -29,7 +29,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && node scripts/copy-data.mjs && vite build -c preview-app/vite.config.ts",
+    "build": "tsup && vite build -c preview-app/vite.config.ts",
     "dev": "tsup --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
@@ -41,6 +41,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-vue": "catalog:",
+    "@vuemailer/caniemail": "workspace:*",
     "@vuemailer/render": "workspace:*",
     "node-html-parser": "catalog:",
     "vite": "catalog:",
@@ -51,6 +52,7 @@
     "@types/node": "catalog:",
     "@types/prismjs": "catalog:",
     "@types/ws": "catalog:",
+    "@vuemailer/core": "workspace:*",
     "concurrently": "catalog:",
     "prismjs": "catalog:",
     "reka-ui": "catalog:",
@@ -58,8 +60,7 @@
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "vue": "catalog:",
-    "vuemailer": "workspace:*"
+    "vue": "catalog:"
   },
   "peerDependencies": {
     "vue": "^3.4.0"

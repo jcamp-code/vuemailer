@@ -1,11 +1,13 @@
 {
-  "name": "@vuemailer/core",
+  "name": "vuemailer",
   "version": "1.0.0",
+  "private": true,
   "description": "Build and send emails with Vue",
   "keywords": [
     "components",
     "email",
     "html-email",
+    "render",
     "vue"
   ],
   "homepage": "https://github.com/jcamp-code/vuemailer#readme",
@@ -15,7 +17,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jcamp-code/vuemailer.git",
-    "directory": "packages/components"
+    "directory": "packages/vuemailer"
   },
   "files": [
     "dist/**"
@@ -55,22 +57,14 @@
     "dev": "tsup --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run"
   },
   "dependencies": {
-    "@vuemailer/render": "workspace:*",
-    "css-tree": "catalog:",
-    "marked": "catalog:",
-    "tailwindcss": "catalog:"
+    "@vuemailer/core": "workspace:*"
   },
   "devDependencies": {
-    "@types/css-tree": "catalog:",
-    "@types/prismjs": "catalog:",
-    "prismjs": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:",
     "vue": "catalog:"
   },
   "peerDependencies": {

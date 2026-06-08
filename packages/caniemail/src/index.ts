@@ -1,11 +1,15 @@
-import { readFileSync } from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-
+// @vuemailer/caniemail — Can I Email compatibility linting for rendered HTML emails.
+//
+// `lintHtml(html)` extracts the CSS declarations, elements, and attributes used by an email and checks them
+// against the full caniemail.json dataset (the same detectors react-email uses), returning per-feature
+// findings with per-client status and the line where each first appears. Pure + framework-agnostic — give it
+// any HTML string. Used by @vuemailer/cli's `lint` and reusable anywhere (e.g. a dashboard).
 import { allCssProperties } from './all-css-properties'
+import caniemailData from './caniemail.json'
 
 // ---------------------------------------------------------------------------
-// caniemail data (full dataset, read at runtime — see copy-data.mjs)
+// caniemail data (full dataset, bundled via a JSON import so this works in any
+// bundler/runtime — no fs read, no data file to ship alongside the build)
 // ---------------------------------------------------------------------------
 
 type RawStats = Record<string, Record<string, Record<string, string>>>
@@ -26,8 +30,7 @@ interface RawData {
   data: SupportEntry[]
 }
 
-const dataPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'caniemail.json')
-const data = JSON.parse(readFileSync(dataPath, 'utf8')) as RawData
+const data = caniemailData as unknown as RawData
 
 // react-email's default relevant clients (overridable there via env; we mirror the default).
 export const RELEVANT_CLIENTS = ['gmail', 'apple-mail', 'outlook', 'yahoo'] as const
