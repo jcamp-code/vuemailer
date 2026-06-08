@@ -1,0 +1,35 @@
+{
+  "name": "vuemailer-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Build and send emails with Vue",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "fmt": "oxfmt --write .",
+    "fmt:check": "oxfmt --check .",
+    "clean": "turbo run clean",
+    "prepare": "lefthook install",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "turbo run build && changeset publish",
+    "preview": "pnpm --filter @vuemailer/cli... build && pnpm --filter @vuemailer/cli play",
+    "preview:dev": "pnpm --filter @vuemailer/cli dev:play"
+  },
+  "devDependencies": {
+    "@changesets/cli": "catalog:",
+    "lefthook": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.5.2"
+}

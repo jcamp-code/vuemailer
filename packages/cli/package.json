@@ -1,0 +1,59 @@
+{
+  "name": "@vuemailer/cli",
+  "version": "0.0.0",
+  "description": "Dev server with live preview for building emails with vuemailer.",
+  "keywords": [
+    "cli",
+    "dev-server",
+    "email",
+    "preview",
+    "vue"
+  ],
+  "license": "MIT",
+  "bin": {
+    "vuemailer": "./dist/bin.js"
+  },
+  "files": [
+    "dist/**"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup && node scripts/copy-data.mjs && vite build -c preview-app/vite.config.ts",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "play": "node ./dist/bin.js dev --dir playground/emails",
+    "dev:ui": "vite -c preview-app/vite.config.ts",
+    "dev:play": "tsup && concurrently -k -n server,ui -c blue,magenta \"node dist/bin.js dev --dir playground/emails --port 3000\" \"vite -c preview-app/vite.config.ts\""
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "catalog:",
+    "@vuemailer/render": "workspace:*",
+    "node-html-parser": "catalog:",
+    "vite": "catalog:",
+    "ws": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "catalog:",
+    "@types/node": "catalog:",
+    "@types/prismjs": "catalog:",
+    "@types/ws": "catalog:",
+    "concurrently": "catalog:",
+    "prismjs": "catalog:",
+    "reka-ui": "catalog:",
+    "tailwindcss": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vue": "catalog:",
+    "vuemailer": "workspace:*"
+  },
+  "peerDependencies": {
+    "vue": "^3.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

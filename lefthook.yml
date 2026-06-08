@@ -1,0 +1,12 @@
+# Git hooks for the vuemailer monorepo. Installed via the `prepare` script (lefthook install).
+# Tests are intentionally NOT here — they run in CI on every PR; the pre-commit stays fast.
+pre-commit:
+  parallel: true
+  commands:
+    fmt:
+      run: pnpm fmt:check
+      fail_text: 'Formatting issues — run: pnpm fmt'
+    lint:
+      run: pnpm lint
+    typecheck:
+      run: pnpm typecheck

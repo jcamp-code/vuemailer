@@ -1,0 +1,42 @@
+packages:
+  - packages/*
+
+# Approve the build scripts we trust so pnpm doesn't warn on every install.
+allowBuilds:
+  esbuild: true
+  lefthook: true
+  sharp: true
+  vue-demi: true
+
+# Single source of truth for every external dependency version. Packages reference
+# these with "catalog:" so a bump happens here once and applies everywhere.
+# (Workspace deps still use workspace:*.)
+catalog:
+  '@changesets/cli': ^2.27.0
+  '@tailwindcss/vite': ^4.1.18
+  '@types/css-tree': ^2.3.11
+  '@types/html-to-text': ^9.0.4
+  '@types/node': ^22.10.0
+  '@types/prismjs': ^1.26.5
+  '@types/ws': ^8.5.0
+  '@vitejs/plugin-vue': ^5.2.0
+  '@vitest/coverage-v8': ^4.1.8
+  'concurrently': ^9.1.0
+  'css-tree': ^3.2.1
+  'html-to-text': ^9.0.5
+  'lefthook': ^1.8.0
+  'marked': ^15.0.0
+  'node-html-parser': ^7.1.0
+  'oxfmt': ^0.53.0
+  'oxlint': ^1.50.0
+  'prettier': ^3.3.0
+  'prismjs': ^1.30.0
+  'reka-ui': ^2.0.0
+  'tailwindcss': ^4.1.18
+  'tsup': ^8.3.0
+  'turbo': ^2.3.0
+  'typescript': ^5.9.3
+  'vite': ^6.0.0
+  'vitest': ^4.1.8
+  'vue': ^3.5.0
+  'ws': ^8.18.0

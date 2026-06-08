@@ -1,0 +1,72 @@
+{
+  "name": "@vuemailer/render",
+  "version": "0.0.0",
+  "description": "Transform Vue components into HTML email templates",
+  "keywords": [
+    "email",
+    "render",
+    "ssr",
+    "vue"
+  ],
+  "license": "MIT",
+  "files": [
+    "dist/**"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/node/index.cjs",
+  "module": "./dist/node/index.js",
+  "types": "./dist/node/index.d.ts",
+  "exports": {
+    ".": {
+      "node": {
+        "import": {
+          "types": "./dist/node/index.d.ts",
+          "default": "./dist/node/index.js"
+        },
+        "require": {
+          "types": "./dist/node/index.d.cts",
+          "default": "./dist/node/index.cjs"
+        }
+      },
+      "default": {
+        "import": {
+          "types": "./dist/browser/index.d.ts",
+          "default": "./dist/browser/index.js"
+        },
+        "require": {
+          "types": "./dist/browser/index.d.cts",
+          "default": "./dist/browser/index.cjs"
+        }
+      }
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "html-to-text": "catalog:",
+    "prettier": "catalog:"
+  },
+  "devDependencies": {
+    "@types/html-to-text": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "vue": "catalog:"
+  },
+  "peerDependencies": {
+    "vue": "^3.4.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
