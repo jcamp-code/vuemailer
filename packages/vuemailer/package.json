@@ -1,7 +1,6 @@
 {
   "name": "vuemailer",
   "version": "1.0.0",
-  "private": true,
   "description": "Build and send emails with Vue",
   "keywords": [
     "components",
